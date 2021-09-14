@@ -1,29 +1,42 @@
 import React, {Component} from 'react';
 import axios from 'axios';
 import Quote from './Quote';
+import './Quote.css'
+
 
 class QuotesList extends Component {
     constructor() {
         super()
         this.state = {
-            quotes: null
+            starterIndex: 0,
+            tenQuotes: null,
         }
+        this.getTenQuotes = this.getTenQuotes.bind(this)
+    }
+
+    async getTenQuotes() {
+        let allQuotes = await axios.get('https://type.fit/api/quotes');
+        let tenQs = allQuotes.data.splice(this.state.starterIndex, 10);
+        let updatedIndex = this.state.starterIndex + 10; 
+        this.setState({tenQuotes: tenQs, starterIndex: updatedIndex})
     }
 
     async componentDidMount() {
-        let quotes = await axios.get('https://type.fit/api/quotes')
-        console.log("QUOTES!!", quotes)
-        this.setState({quotes: quotes.data})
+        this.getTenQuotes()
     }
 
     render() {
-        let allQuotes = this.state.quotes === null ? 
+        let allQuotes = this.state.tenQuotes === null ? 
             <p>Loading....</p> :
-            this.state.quotes.map(q => <Quote q={q}/>)
+            this.state.tenQuotes.map(q => <Quote q={q}/>)
         return(
-            <div>
-                Quotes List Component
-                <ul>
+            <div className="JokeList">
+                <div className="JokeList-sidebar">
+                    <h1 className="JokeList-title">All Quotes</h1>
+                    <button>Your Favorites</button>
+                    <button className="JokeList-getmore" onClick={this.getTenQuotes}>Load More Quotes</button>
+                </div>
+                <ul className="JokeList-jokes">
                     {allQuotes}
                 </ul>
             </div>

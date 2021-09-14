@@ -8,9 +8,12 @@ class Quote extends Component {
     render() {
         const {text, author} = this.props.q;
         return(
-            <li>
-                <p>{text}</p>
-                <p>{author}</p>
+            <li className="Joke">
+                <button className="Joke-buttons">♡</button>
+                <p>
+                    "{text}"
+                    <big> - {author}.</big>
+                </p>
             </li>
         )
     }
