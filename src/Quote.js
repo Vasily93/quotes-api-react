@@ -4,17 +4,26 @@ class Quote extends Component {
     constructor(props) {
         super(props)
         this.state = {}
+        this.handeFav = this.handeFav.bind(this)
+    }
+
+    handeFav(e) {
+        this.props.addToFavorites(e.target.id)
     }
     render() {
-        const {text, author} = this.props.q;
+        const {text, author, id} = this.props.q;
         return(
-            <li className="Joke">
-                <button className="Joke-buttons">♡</button>
+            <div className="Quote" >
+                <button className="Quote-buttons"
+                    onClick={this.handeFav}
+                    id={id}
+                >♡</button>
+
                 <p>
                     "{text}"
                     <big> - {author}.</big>
                 </p>
-            </li>
+            </div>
         )
     }
 }
