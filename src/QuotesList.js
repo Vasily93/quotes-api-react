@@ -11,7 +11,7 @@ class QuotesList extends Component {
         this.state = {
             starterIndex: 0,
             allQuotes: null,
-            favorites: JSON.parse(window.localStorage.getItem('favorites')),
+            favorites: JSON.parse(window.localStorage.getItem('favorites')) || [],
             showFavs: false
         }
         this.getAllQuotes = this.getAllQuotes.bind(this);
