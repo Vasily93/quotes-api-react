@@ -23,11 +23,15 @@ class QuotesList extends Component {
     async getAllQuotes() {
         let allQuotes = await axios.get('https://type.fit/api/quotes');
         let tenQs = allQuotes.data.splice(this.state.starterIndex, 10);
-        tenQs.forEach(quote => { quote.id = uuidv4() });
+        tenQs.forEach(quote => { 
+            quote.id = uuidv4();
+            quote.favorite = false 
+        });
         this.state.favorites.map(fav => ( 
             tenQs.forEach(q => {
                 if(q.text === fav.text) {
                     q.id = fav.id
+                    q.favorite = true
                 }
             })
         ))
@@ -41,13 +45,16 @@ class QuotesList extends Component {
     }
 
     addToFavorites(id) {
-        const favorited = this.state.allQuotes.find(q => q.id === id) || 
-            this.state.favorites.find(q => q.id === id);
+        const favorited = this.state.allQuotes.find(q => q.id === id) 
+            || this.state.favorites.find(q => q.id === id);
+
         if(this.isFavorited(favorited)) {
+            favorited.favorite = false; 
             const updated = this.state.favorites.filter(q => q.text !== favorited.text);
             this.setState(state => state = {...state, favorites: updated})
         } else {
             const updated = this.state.favorites;
+            favorited.favorite = true;
             updated.push(favorited);
             this.setState(state => state = {...state, favorites: updated})
         }
@@ -66,7 +73,7 @@ class QuotesList extends Component {
     }
 
     componentDidUpdate() {
-        // console.log(window.localStorage.favorites)
+        console.log('updated!!!')
         window.localStorage.favorites = JSON.stringify(this.state.favorites);   
     }
 

@@ -11,13 +11,15 @@ class Quote extends Component {
         this.props.addToFavorites(e.target.id)
     }
     render() {
-        const {text, author, id} = this.props.q;
+        let {text, author, id, favorite} = this.props.q;
+        author = author === null ? <i>Unknown</i> : author ;
+        let like = favorite ? "❤" : "♡";
         return(
-            <div className="Quote" >
+            <div className="Quote" >    
                 <button className="Quote-buttons"
                     onClick={this.handeFav}
                     id={id}
-                >♡</button>
+                >{like}</button>
 
                 <p>
                     "{text}"
