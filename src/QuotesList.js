@@ -12,12 +12,25 @@ class QuotesList extends Component {
             starterIndex: 0,
             allQuotes: null,
             favorites: JSON.parse(window.localStorage.getItem('favorites')) || [],
-            showFavs: false
+            showFavs: false,
+            currentAuthor: null
         }
         this.getAllQuotes = this.getAllQuotes.bind(this);
         this.addToFavorites = this.addToFavorites.bind(this);
         this.showFavorites = this.showFavorites.bind(this);
         this.isFavorited = this.isFavorited.bind(this);
+        this.getAuthorQuotes = this.getAuthorQuotes.bind(this);
+        this.handleClose = this.handleClose.bind(this);
+    }
+
+    handleClose() {
+        this.setState(state => state = {...state, currentAuthor: null})
+    }
+
+    async getAuthorQuotes(author) {
+        let allQuotes = await axios.get('https://type.fit/api/quotes');
+        let authorQuotes = allQuotes.data.filter(q => q.author === author);
+        this.setState(state => state = {...state, currentAuthor: authorQuotes})
     }
 
     async getAllQuotes() {
@@ -62,7 +75,6 @@ class QuotesList extends Component {
 
     showFavorites() {
         this.setState(state => state = {...state, showFavs: !this.state.showFavs})
-
     }
 
     async componentDidMount() {
@@ -73,16 +85,20 @@ class QuotesList extends Component {
     }
 
     componentDidUpdate() {
-        console.log('updated!!!')
         window.localStorage.favorites = JSON.stringify(this.state.favorites);   
     }
 
     render() {
         let quotes = this.state.showFavs ? this.state.favorites : this.state.allQuotes;
+        quotes = this.state.currentAuthor === null ? quotes : this.state.currentAuthor;
+
         let btnText = this.state.showFavs ? 'Show All' : `Your Favorites(${this.state.favorites.length})`;
+        let author = this.state.currentAuthor !== null ? <li><h4>All Quotes by {this.state.currentAuthor[0].author}  </h4></li> : null;
+        let closeBtn = this.state.currentAuthor !== null ? <button onClick={this.handleClose}>Close</button> : null;
+
         let quotesList = this.state.allQuotes === null ? 
             <p>Loading....</p> :
-            quotes.map(q => <li key={q.id}><Quote q={q} addToFavorites={this.addToFavorites}/></li>)
+            quotes.map(q => <li key={q.id}><Quote q={q} addToFavorites={this.addToFavorites} getAuthorQuotes={this.getAuthorQuotes}/></li>)
         return( 
             <div className="QuoteList">
                 <div className="QuoteList-sidebar">
@@ -90,9 +106,12 @@ class QuotesList extends Component {
                     <button onClick={this.showFavorites}>{btnText}</button>
                     <button className="QuoteList-getmore" onClick={this.getAllQuotes}>Load More Quotes</button>
                 </div>
+                
                 <ul className="QuoteList-quotes">
+                    {author}
                     {quotesList}
-                </ul>   
+                </ul>
+                {closeBtn}
             </div>
         )
     }

@@ -4,12 +4,19 @@ class Quote extends Component {
     constructor(props) {
         super(props)
         this.state = {}
-        this.handeFav = this.handeFav.bind(this)
+        this.handeFav = this.handeFav.bind(this);
+        this.handleAuthor = this.handleAuthor.bind(this);
     }
 
     handeFav(e) {
         this.props.addToFavorites(e.target.id)
     }
+
+    async handleAuthor(e) {
+        console.log(e.target.innerText);
+        await this.props.getAuthorQuotes(this.props.q.author);
+    }
+
     render() {
         let {text, author, id, favorite} = this.props.q;
         author = author === null ? <i>Unknown</i> : author ;
@@ -23,7 +30,7 @@ class Quote extends Component {
 
                 <p>
                     "{text}"
-                    <big> - {author}.</big>
+                    <big onClick={this.handleAuthor}> - {author}.</big>
                 </p>
             </div>
         )
