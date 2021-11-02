@@ -11,7 +11,7 @@ class QuotesList extends Component {
         this.state = {
             starterIndex: 0,
             allQuotes: null,
-            favorites: [],
+            favorites: JSON.parse(window.localStorage.getItem('favorites')),
             showFavs: false
         }
         this.getAllQuotes = this.getAllQuotes.bind(this);
@@ -23,9 +23,14 @@ class QuotesList extends Component {
     async getAllQuotes() {
         let allQuotes = await axios.get('https://type.fit/api/quotes');
         let tenQs = allQuotes.data.splice(this.state.starterIndex, 10);
-        tenQs.forEach(quote => {
-            quote.id = uuidv4()
-        });
+        tenQs.forEach(quote => { quote.id = uuidv4() });
+        this.state.favorites.map(fav => ( 
+            tenQs.forEach(q => {
+                if(q.text === fav.text) {
+                    q.id = fav.id
+                }
+            })
+        ))
         let updatedIndex = this.state.starterIndex + 10; 
         this.setState(state => state = {...state, allQuotes: tenQs, starterIndex: updatedIndex})
     }
@@ -36,8 +41,8 @@ class QuotesList extends Component {
     }
 
     addToFavorites(id) {
-        const favorited = this.state.allQuotes.find(q => q.id === id);
-        console.log(this.isFavorited(favorited))
+        const favorited = this.state.allQuotes.find(q => q.id === id) || 
+            this.state.favorites.find(q => q.id === id);
         if(this.isFavorited(favorited)) {
             const updated = this.state.favorites.filter(q => q.text !== favorited.text);
             this.setState(state => state = {...state, favorites: updated})
@@ -54,7 +59,15 @@ class QuotesList extends Component {
     }
 
     async componentDidMount() {
-        this.getAllQuotes()
+        this.getAllQuotes();
+        if(!window.localStorage.favorites) {
+            window.localStorage.setItem('favorites', JSON.stringify(this.state.favorites))
+        }
+    }
+
+    componentDidUpdate() {
+        // console.log(window.localStorage.favorites)
+        window.localStorage.favorites = JSON.stringify(this.state.favorites);   
     }
 
     render() {
@@ -68,11 +81,11 @@ class QuotesList extends Component {
                 <div className="QuoteList-sidebar">
                     <h1 className="QuoteList-title">All Quotes</h1>
                     <button onClick={this.showFavorites}>{btnText}</button>
-                    <button className="QuoteList-getmore" onClick={this.getTenQuotes}>Load More Quotes</button>
+                    <button className="QuoteList-getmore" onClick={this.getAllQuotes}>Load More Quotes</button>
                 </div>
                 <ul className="QuoteList-quotes">
                     {quotesList}
-                </ul>
+                </ul>   
             </div>
         )
     }
