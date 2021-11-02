@@ -10,49 +10,60 @@ class QuotesList extends Component {
         super()
         this.state = {
             starterIndex: 0,
-            tenQuotes: null,
+            allQuotes: null,
             favorites: [],
             showFavs: false
         }
-        this.getTenQuotes = this.getTenQuotes.bind(this);
+        this.getAllQuotes = this.getAllQuotes.bind(this);
         this.addToFavorites = this.addToFavorites.bind(this);
         this.showFavorites = this.showFavorites.bind(this);
+        this.isFavorited = this.isFavorited.bind(this);
     }
 
-    async getTenQuotes() {
+    async getAllQuotes() {
         let allQuotes = await axios.get('https://type.fit/api/quotes');
         let tenQs = allQuotes.data.splice(this.state.starterIndex, 10);
-        tenQs.forEach(obj => {
-            obj.id = uuidv4()
+        tenQs.forEach(quote => {
+            quote.id = uuidv4()
         });
         let updatedIndex = this.state.starterIndex + 10; 
-        this.setState({tenQuotes: tenQs, starterIndex: updatedIndex})
+        this.setState(state => state = {...state, allQuotes: tenQs, starterIndex: updatedIndex})
+    }
+
+    isFavorited(newQuote) {
+        const doublcates = this.state.favorites.filter(q => q.text === newQuote.text);
+        return doublcates.length > 0;
     }
 
     addToFavorites(id) {
-        const favorited = this.state.tenQuotes.find(q => q.id === id);
-        let updatedState = this.state;
-        updatedState.favorites.push(favorited);
-        this.setState(updatedState)
+        const favorited = this.state.allQuotes.find(q => q.id === id);
+        console.log(this.isFavorited(favorited))
+        if(this.isFavorited(favorited)) {
+            const updated = this.state.favorites.filter(q => q.text !== favorited.text);
+            this.setState(state => state = {...state, favorites: updated})
+        } else {
+            const updated = this.state.favorites;
+            updated.push(favorited);
+            this.setState(state => state = {...state, favorites: updated})
+        }
     }
 
     showFavorites() {
-        let updatedState = this.state;
-        updatedState.showFavs = !updatedState.showFavs;
-        this.setState(updatedState)
+        this.setState(state => state = {...state, showFavs: !this.state.showFavs})
+
     }
 
     async componentDidMount() {
-        this.getTenQuotes()
+        this.getAllQuotes()
     }
 
     render() {
-        let quotes = this.state.showFavs ? this.state.favorites : this.state.tenQuotes;
-        let btnText = this.state.showFavs ? 'Show All' : 'Your Favorites';
-        let quotesList = this.state.tenQuotes === null ? 
+        let quotes = this.state.showFavs ? this.state.favorites : this.state.allQuotes;
+        let btnText = this.state.showFavs ? 'Show All' : `Your Favorites(${this.state.favorites.length})`;
+        let quotesList = this.state.allQuotes === null ? 
             <p>Loading....</p> :
             quotes.map(q => <li key={q.id}><Quote q={q} addToFavorites={this.addToFavorites}/></li>)
-        return(
+        return( 
             <div className="QuoteList">
                 <div className="QuoteList-sidebar">
                     <h1 className="QuoteList-title">All Quotes</h1>
