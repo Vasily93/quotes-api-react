@@ -21,33 +21,49 @@ class QuotesList extends Component {
         this.isFavorited = this.isFavorited.bind(this);
         this.getAuthorQuotes = this.getAuthorQuotes.bind(this);
         this.handleClose = this.handleClose.bind(this);
+        this.setIdAndFav = this.setIdAndFav.bind(this);
+        this.checkDoubles = this.checkDoubles.bind(this);
     }
 
     handleClose() {
         this.setState(state => state = {...state, currentAuthor: null})
     }
 
-    async getAuthorQuotes(author) {
-        let allQuotes = await axios.get('https://type.fit/api/quotes');
-        let authorQuotes = allQuotes.data.filter(q => q.author === author);
-        this.setState(state => state = {...state, currentAuthor: authorQuotes})
+    setIdAndFav(arr) {
+        let modifiedArr = arr.map(quote => {
+            quote.id = uuidv4();
+            quote.favorite = false;
+            return quote;
+        })
+        return modifiedArr;
     }
 
-    async getAllQuotes() {
-        let allQuotes = await axios.get('https://type.fit/api/quotes');
-        let tenQs = allQuotes.data.splice(this.state.starterIndex, 10);
-        tenQs.forEach(quote => { 
-            quote.id = uuidv4();
-            quote.favorite = false 
-        });
-        this.state.favorites.map(fav => ( 
-            tenQs.forEach(q => {
+    checkDoubles(newArr, exsistingArr) {
+        exsistingArr.map(fav => ( 
+            newArr.forEach(q => {
                 if(q.text === fav.text) {
                     q.id = fav.id
                     q.favorite = true
                 }
             })
         ))
+        return newArr;
+    }
+
+    async getAuthorQuotes(author) {
+        const allQuotes = await axios.get('https://type.fit/api/quotes');
+        let authorQuotes = allQuotes.data.filter(q => q.author === author);
+        authorQuotes = this.setIdAndFav(authorQuotes);
+        authorQuotes = this.checkDoubles(authorQuotes, this.state.allQuotes);
+        authorQuotes = this.checkDoubles(authorQuotes, this.state.favorites);
+        this.setState(state => state = {...state, currentAuthor: authorQuotes})
+    }
+
+    async getAllQuotes() {
+        const allQuotes = await axios.get('https://type.fit/api/quotes');
+        let tenQs = allQuotes.data.splice(this.state.starterIndex, 10);
+        tenQs = this.setIdAndFav(tenQs);
+        tenQs = this.checkDoubles(tenQs, this.state.favorites);
         let updatedIndex = this.state.starterIndex + 10; 
         this.setState(state => state = {...state, allQuotes: tenQs, starterIndex: updatedIndex})
     }
@@ -59,7 +75,8 @@ class QuotesList extends Component {
 
     addToFavorites(id) {
         const favorited = this.state.allQuotes.find(q => q.id === id) 
-            || this.state.favorites.find(q => q.id === id);
+            || this.state.favorites.find(q => q.id === id)
+            || this.state.currentAuthor.find(q => q.id === id)
 
         if(this.isFavorited(favorited)) {
             favorited.favorite = false; 
