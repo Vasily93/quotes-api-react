@@ -9,20 +9,21 @@ class QuotesList extends Component {
     constructor() {
         super()
         this.state = {
-            starterIndex: 0,
-            allQuotes: null,
-            favorites: JSON.parse(window.localStorage.getItem('favorites')) || [],
-            showFavs: false,
+            allQuotes: JSON.parse(window.localStorage.getItem('allQuotes')),
+            randomFive: [],
+            favorites: [],
+            currentList: 'random5',
             currentAuthor: null
         }
-        this.getAllQuotes = this.getAllQuotes.bind(this);
-        this.addToFavorites = this.addToFavorites.bind(this);
-        this.showFavorites = this.showFavorites.bind(this);
-        this.isFavorited = this.isFavorited.bind(this);
         this.getAuthorQuotes = this.getAuthorQuotes.bind(this);
         this.handleClose = this.handleClose.bind(this);
         this.setIdAndFav = this.setIdAndFav.bind(this);
         this.checkDoubles = this.checkDoubles.bind(this);
+        this.getRandomFive = this.getRandomFive.bind(this);
+        this.toggleFavorite = this.toggleFavorite.bind(this);
+        this.getQuoteById = this.getQuoteById.bind(this);
+        this.showFavorites = this.showFavorites.bind(this);
+        this.getFavIds = this.getFavIds.bind(this);
     }
 
     handleClose() {
@@ -50,78 +51,97 @@ class QuotesList extends Component {
         return newArr;
     }
 
-    async getAuthorQuotes(author) {
-        const allQuotes = await axios.get('https://type.fit/api/quotes');
-        let authorQuotes = allQuotes.data.filter(q => q.author === author);
-        authorQuotes = this.setIdAndFav(authorQuotes);
-        authorQuotes = this.checkDoubles(authorQuotes, this.state.allQuotes);
-        authorQuotes = this.checkDoubles(authorQuotes, this.state.favorites);
+     getAuthorQuotes(author) {
+        let authorQuotes = this.state.allQuotes.filter(q => q.author === author);
+        console.log(authorQuotes)
         this.setState(state => state = {...state, currentAuthor: authorQuotes})
     }
 
-    async getAllQuotes() {
-        const allQuotes = await axios.get('https://type.fit/api/quotes');
-        let tenQs = allQuotes.data.splice(this.state.starterIndex, 10);
-        tenQs = this.setIdAndFav(tenQs);
-        tenQs = this.checkDoubles(tenQs, this.state.favorites);
-        let updatedIndex = this.state.starterIndex + 10; 
-        this.setState(state => state = {...state, allQuotes: tenQs, starterIndex: updatedIndex})
-    }
-
-    isFavorited(newQuote) {
-        const doublcates = this.state.favorites.filter(q => q.text === newQuote.text);
-        return doublcates.length > 0;
-    }
-
-    addToFavorites(id) {
-        const favorited = this.state.allQuotes.find(q => q.id === id) 
-            || this.state.favorites.find(q => q.id === id)
-            || this.state.currentAuthor.find(q => q.id === id)
-
-        if(this.isFavorited(favorited)) {
-            favorited.favorite = false; 
-            const updated = this.state.favorites.filter(q => q.text !== favorited.text);
-            this.setState(state => state = {...state, favorites: updated})
-        } else {
-            const updated = this.state.favorites;
-            favorited.favorite = true;
-            updated.push(favorited);
-            this.setState(state => state = {...state, favorites: updated})
+    getRandomFive() {
+        const {allQuotes}  = this.state;
+        const randomFive = [];
+        while(randomFive.length < 5) {
+            let randomQuote = allQuotes[Math.floor(Math.random() * allQuotes.length - 1)];
+            randomFive.push(randomQuote.id)
         }
+        this.setState(state => state = {...state, currentList: 'random5', randomFive: randomFive})
+    }
+
+    getQuoteById(id) {
+        const quote = this.state.allQuotes.find(q => q.id === id);
+        return quote;
+    }
+
+    toggleFavorite(id) {
+        let quote = this.getQuoteById(id);
+        quote.favorite = !quote.favorite;
+        const updateQuotes = this.state.allQuotes.map(q => {
+            if(q.id === quote.id) {
+                q = quote;
+            }
+            return q;
+        })
+        this.setState(state => state = {...state, allQuotes: updateQuotes})
+    }
+
+    getFavIds(arr) {
+        return arr.map(q => q = q.id)
     }
 
     showFavorites() {
-        this.setState(state => state = {...state, showFavs: !this.state.showFavs})
+        this.setState(state => state = {...state, currentList: 'favorites'})
     }
 
     async componentDidMount() {
-        this.getAllQuotes();
-        if(!window.localStorage.favorites) {
-            window.localStorage.setItem('favorites', JSON.stringify(this.state.favorites))
+        const QuotesData = await axios.get('https://type.fit/api/quotes');
+        let allQuotes = QuotesData.data;
+        allQuotes = this.setIdAndFav(allQuotes);
+
+        this.setState(state => state = {...state, allQuotes: allQuotes});
+        this.getRandomFive()
+
+        if(!window.localStorage.allQuotes) {
+            window.localStorage.setItem('allQuotes', JSON.stringify(this.state.allQuotes))
         }
     }
 
     componentDidUpdate() {
+        console.log('updated')
         window.localStorage.favorites = JSON.stringify(this.state.favorites);   
     }
 
     render() {
-        let quotes = this.state.showFavs ? this.state.favorites : this.state.allQuotes;
-        quotes = this.state.currentAuthor === null ? quotes : this.state.currentAuthor;
+        let list;
+        switch(this.state.currentList) {
+            case 'random5':
+                list = this.state.randomFive;
+                break;
+            case 'favorites':
+                list = this.state.allQuotes.filter(quote => quote.favorite === true).map(q => q = q.id);
+                break;
+            default:
+                list = this.state.randomFive;
+        }
 
-        let btnText = this.state.showFavs ? 'Show All' : `Your Favorites(${this.state.favorites.length})`;
         let author = this.state.currentAuthor !== null ? <li><h4>All Quotes by {this.state.currentAuthor[0].author}  </h4></li> : null;
         let closeBtn = this.state.currentAuthor !== null ? <button onClick={this.handleClose}>Close</button> : null;
 
         let quotesList = this.state.allQuotes === null ? 
             <p>Loading....</p> :
-            quotes.map(q => <li key={q.id}><Quote q={q} addToFavorites={this.addToFavorites} getAuthorQuotes={this.getAuthorQuotes}/></li>)
+            list.map(id => {
+                let q = this.getQuoteById(id);
+                return <li key={q.id}>
+                            <Quote q={q} 
+                                toggleFavorite={this.toggleFavorite}
+                                getAuthorQuotes={this.getAuthorQuotes}
+                            />
+                        </li>
+            })
         return( 
             <div className="QuoteList">
                 <div className="QuoteList-sidebar">
-                    <h1 className="QuoteList-title">All Quotes</h1>
-                    <button onClick={this.showFavorites}>{btnText}</button>
-                    <button className="QuoteList-getmore" onClick={this.getAllQuotes}>Load More Quotes</button>
+                    <button className="QuoteList-getmore" onClick={this.showFavorites}>My Favorites</button>
+                    <button className="QuoteList-getmore" onClick={this.getRandomFive}>Get Five Random Quotes</button>
                 </div>
                 
                 <ul className="QuoteList-quotes">

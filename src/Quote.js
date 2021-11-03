@@ -1,4 +1,9 @@
 import React, {Component} from 'react';
+import Checkbox from '@mui/material/Checkbox';
+import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
+import Favorite from '@mui/icons-material/Favorite';
+
+const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
 class Quote extends Component {
     constructor(props) {
@@ -9,7 +14,8 @@ class Quote extends Component {
     }
 
     handeFav(e) {
-        this.props.addToFavorites(e.target.id)
+        const {id} = e.target;
+        this.props.toggleFavorite(id)
     }
 
     async handleAuthor(e) {
@@ -20,13 +26,9 @@ class Quote extends Component {
     render() {
         let {text, author, id, favorite} = this.props.q;
         author = author === null ? <i>Unknown</i> : author ;
-        let like = favorite ? "❤" : "♡";
         return(
             <div className="Quote" >    
-                <button className="Quote-buttons"
-                    onClick={this.handeFav}
-                    id={id}
-                >{like}</button>
+                <Checkbox id={id} checked={favorite} onClick={this.handeFav} {...label} icon={<FavoriteBorder />} checkedIcon={<Favorite />} />
 
                 <p>
                     "{text}"
