@@ -11,7 +11,6 @@ class QuotesList extends Component {
         this.state = {
             allQuotes: JSON.parse(window.localStorage.getItem('allQuotes')),
             randomFive: [],
-            favorites: [],
             currentList: 'random5',
             currentAuthor: null
         }
@@ -52,9 +51,7 @@ class QuotesList extends Component {
     }
 
      getAuthorQuotes(author) {
-        let authorQuotes = this.state.allQuotes.filter(q => q.author === author);
-        console.log(authorQuotes)
-        this.setState(state => state = {...state, currentAuthor: authorQuotes})
+        this.setState(state => state = {...state, currentList: 'author', currentAuthor: author})
     }
 
     getRandomFive() {
@@ -119,12 +116,12 @@ class QuotesList extends Component {
             case 'favorites':
                 list = this.state.allQuotes.filter(quote => quote.favorite === true).map(q => q = q.id);
                 break;
+            case 'author':
+                list = this.state.allQuotes.filter(quote => quote.author === this.state.currentAuthor).map(q => q = q.id);
+                break;
             default:
                 list = this.state.randomFive;
         }
-
-        let author = this.state.currentAuthor !== null ? <li><h4>All Quotes by {this.state.currentAuthor[0].author}  </h4></li> : null;
-        let closeBtn = this.state.currentAuthor !== null ? <button onClick={this.handleClose}>Close</button> : null;
 
         let quotesList = this.state.allQuotes === null ? 
             <p>Loading....</p> :
@@ -145,10 +142,8 @@ class QuotesList extends Component {
                 </div>
                 
                 <ul className="QuoteList-quotes">
-                    {author}
                     {quotesList}
                 </ul>
-                {closeBtn}
             </div>
         )
     }

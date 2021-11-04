@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import Checkbox from '@mui/material/Checkbox';
 import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
 import Favorite from '@mui/icons-material/Favorite';
+import Button from '@mui/material/Button';
+import Tooltip from '@mui/material/Tooltip';
 
 const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
 
@@ -31,8 +33,10 @@ class Quote extends Component {
                 <Checkbox id={id} checked={favorite} onClick={this.handeFav} {...label} icon={<FavoriteBorder />} checkedIcon={<Favorite />} />
 
                 <p>
-                    "{text}"
-                    <big onClick={this.handleAuthor}> - {author}.</big>
+                    "{text}" -
+                    <Tooltip title={<a href='aha'>`All quotes by ${author}`</a>} arrow>
+                        <Button onClick={this.handleAuthor}>{author}</Button>
+                    </Tooltip>
                 </p>
             </div>
         )
