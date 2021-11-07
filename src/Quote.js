@@ -13,6 +13,8 @@ class Quote extends Component {
         this.state = {}
         this.handeFav = this.handeFav.bind(this);
         this.handleAuthor = this.handleAuthor.bind(this);
+        this.createQuery = this.createQuery.bind(this);
+
     }
 
     handeFav(e) {
@@ -25,19 +27,23 @@ class Quote extends Component {
         await this.props.getAuthorQuotes(this.props.q.author);
     }
 
+    createQuery(author) {
+        return 'https://en.wikipedia.org/wiki/' + author;
+    }
+
     render() {
         let {text, author, id, favorite} = this.props.q;
-        author = author === null ? <i>Unknown</i> : author ;
+        author = author === null ? <i>Unknown</i> : author;
+        const query = this.createQuery(author)
         return(
-            <div className="Quote" >    
-                <Checkbox id={id} checked={favorite} onClick={this.handeFav} {...label} icon={<FavoriteBorder />} checkedIcon={<Favorite />} />
-
+            <div >    
                 <p>
+                <Checkbox id={id} checked={favorite} onClick={this.handeFav} {...label} icon={<FavoriteBorder />} checkedIcon={<Favorite />} />
                     "{text}" -
-                    <Tooltip title={<a href='aha'>`All quotes by ${author}`</a>} arrow>
-                        <Button onClick={this.handleAuthor}>{author}</Button>
-                    </Tooltip>
                 </p>
+                <Tooltip title={<a target="_blank" rel="noreferrer" href={query}>`Learn about {author}`</a>} arrow>
+                    <Button onClick={this.handleAuthor}>{author}</Button>
+                </Tooltip>
             </div>
         )
     }

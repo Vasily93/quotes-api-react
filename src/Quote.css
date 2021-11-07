@@ -1,5 +1,5 @@
 .Quote {
-    display: flex;
+    /* display: flex; */
     border-bottom: 2px solid #eeeeee;
     align-items: center;
     justify-content: center;
@@ -17,6 +17,7 @@
   }
   
   .Quote-text {
+    align-items: center;
     width: 75%;
     font-size: 1.2rem;
   }

@@ -9,7 +9,7 @@ class QuotesList extends Component {
     constructor() {
         super()
         this.state = {
-            allQuotes: JSON.parse(window.localStorage.getItem('allQuotes')),
+            allQuotes: JSON.parse(window.localStorage.getItem('allQuotes')) || ['empty'],
             randomFive: [],
             currentList: 'random5',
             currentAuthor: null
@@ -17,7 +17,6 @@ class QuotesList extends Component {
         this.getAuthorQuotes = this.getAuthorQuotes.bind(this);
         this.handleClose = this.handleClose.bind(this);
         this.setIdAndFav = this.setIdAndFav.bind(this);
-        this.checkDoubles = this.checkDoubles.bind(this);
         this.getRandomFive = this.getRandomFive.bind(this);
         this.toggleFavorite = this.toggleFavorite.bind(this);
         this.getQuoteById = this.getQuoteById.bind(this);
@@ -36,19 +35,7 @@ class QuotesList extends Component {
             return quote;
         })
         return modifiedArr;
-    }
-
-    checkDoubles(newArr, exsistingArr) {
-        exsistingArr.map(fav => ( 
-            newArr.forEach(q => {
-                if(q.text === fav.text) {
-                    q.id = fav.id
-                    q.favorite = true
-                }
-            })
-        ))
-        return newArr;
-    }
+    }   
 
      getAuthorQuotes(author) {
         this.setState(state => state = {...state, currentList: 'author', currentAuthor: author})
@@ -90,21 +77,20 @@ class QuotesList extends Component {
     }
 
     async componentDidMount() {
-        const QuotesData = await axios.get('https://type.fit/api/quotes');
-        let allQuotes = QuotesData.data;
-        allQuotes = this.setIdAndFav(allQuotes);
-
-        this.setState(state => state = {...state, allQuotes: allQuotes});
+        if(this.state.allQuotes[0] === 'empty') {
+            const QuotesData = await axios.get('https://type.fit/api/quotes');
+            let allQuotes = QuotesData.data;
+            allQuotes = this.setIdAndFav(allQuotes);
+            this.setState(state => state = {...state, allQuotes: allQuotes});
+        }
         this.getRandomFive()
-
         if(!window.localStorage.allQuotes) {
             window.localStorage.setItem('allQuotes', JSON.stringify(this.state.allQuotes))
         }
     }
 
     componentDidUpdate() {
-        console.log('updated')
-        window.localStorage.favorites = JSON.stringify(this.state.favorites);   
+        window.localStorage.setItem('allQuotes', JSON.stringify(this.state.allQuotes))
     }
 
     render() {
@@ -127,7 +113,7 @@ class QuotesList extends Component {
             <p>Loading....</p> :
             list.map(id => {
                 let q = this.getQuoteById(id);
-                return <li key={q.id}>
+                return <li className="Quote" key={q.id}>
                             <Quote q={q} 
                                 toggleFavorite={this.toggleFavorite}
                                 getAuthorQuotes={this.getAuthorQuotes}
